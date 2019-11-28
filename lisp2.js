@@ -14,7 +14,7 @@ const ref = {'begin' : beginParser,
 function normalForm (operand, input, dict = envDict) {
     const arr = []
     while (!input.startsWith(')') && input.length) {
-        let [result,rest] = evaluvator(input)
+        let [result,rest] = evaluator(input)
         arr.push(result)
         input = rest
     }
@@ -33,9 +33,9 @@ function quoteParser(input){
 }
 
 function ifParser (input, dict = envDict) {
-    var [result,rest] = evaluvator(input)
-    var [pass,rest] = evaluvator(rest)
-    var [fail,rest] = evaluvator(rest)
+    var [result,rest] = evaluator(input)
+    var [pass,rest] = evaluator(rest)
+    var [fail,rest] = evaluator(rest)
     if (!rest.startsWith(')')) return null
     return result ? [pass,rest.slice(1)] : [fail,rest.slice(1)]
   }
@@ -43,7 +43,7 @@ function ifParser (input, dict = envDict) {
 function defParser (input, dict = envDict) {
     let match = /^(.*?) +(.*)/.exec(input)
     if (!match) return null
-    let [result,rest] = evaluvator(match[2])
+    let [result,rest] = evaluator(match[2])
     dict[match[1]] = result
     if (!rest.trimStart().startsWith(')')) return null
     return [dict,rest.slice(1)]
@@ -52,7 +52,7 @@ function defParser (input, dict = envDict) {
 function beginParser (input) {
     let result,rest
     do {
-        [result,rest] = evaluvator(input)
+        [result,rest] = evaluator(input)
     } while (!rest.startsWith(')'))
     return [result, rest.slice(1)]
 }
@@ -66,7 +66,7 @@ function atomicValue(input, dict=envDict){
     if (variable && variable[1]) return [dict[variable[1]],variable[2]]
 }
 
-function evaluvator(input){
+function evaluator(input){
     let isAtomic = atomicValue(input)
     if (isAtomic) return isAtomic
     let result,rest = input
@@ -78,7 +78,7 @@ function evaluvator(input){
     }while(rest)
     return rest ? [result,rest] : result
 }
-// console.log(evaluvator('(begin (begin (define r "make")) (define s "made"))'))
-// console.log(evaluvator('(begin (define r 1) (+ r 10))'))
-// console.log(evaluvator('(if (- 1 1) "yes" "no")'))
-// console.log(evaluvator('(quote one    two)'))
+console.log(evaluator('(begin (begin (define r "make")) (define s "made"))'))
+console.log(evaluator('(begin (define r 1) (+ r 10))'))
+console.log(evaluator('(if (- 1 1) "yes" "no")'))
+console.log(evaluator('(quote one    two)'))
