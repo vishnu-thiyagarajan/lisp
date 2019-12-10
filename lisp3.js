@@ -1,11 +1,15 @@
 const envDict = {
-  "+": input => input.reduce((a, b) => a + b),
-  "-": input => input.reduce((a, b) => a - b),
-  "*": input => input.reduce((a, b) => a * b),
-  "/": input => input.reduce((a, b) => a / b),
+  "list": input => input,
+  "+": input => input.reduce((a, b) => a + b,0),
+  "*": input => input.reduce((a, b) => a * b,1),
+  "/": input => input.reduce((a, b) => a / b,1),
   min: input => Math.min(...input),
   max: input => Math.max(...input),
   not: input => !input.every(val => (val ? true : false)),
+  "-": input => { 
+    if (input.length == 1) return -1 * input[0]
+    return input.reduce((a, b) => a - b)
+  },
   ">": input => {
     let res = input.reduce((a, b) => (a > b ? b : NaN));
     return res ? true : false;
@@ -36,8 +40,16 @@ const ref = {
   begin: beginParser,
   define: defParser,
   if: ifParser,
-  lambda: lambdaParser
+  lambda: lambdaParser,
+  count: countParser,
 };
+
+function countParser(input) {
+  var [needCountOf,input] = evaluator(input)
+  input = evaluator(input)[0]
+  if (typeof input == "string") return [input.split(needCountOf).length - 1,'']
+  return [input.filter(x => x==needCountOf).length,'']
+}
 
 function normalForm(operator, input, dict = envDict) {
   let rest,result,arr = [];
@@ -53,14 +65,14 @@ function lambdaParser(input, dict = envDict) {
   let match = /^ *\((.+?)\) +(.+)/.exec(input);
   if (!match) return null;
   let rest, result,
-    vars = match[1]
+    vars = match[1].split(' ')
   let value = function (val) {
     let obj = {};
     for (key in vars) {
       atomVal = atomicValue(val[key]);
       obj[vars[key]] = atomVal ? atomVal[0] : null;
     }
-      [result, rest] = evaluator(match[2], obj);
+    [result, rest] = evaluator(match[2], obj);
     return result;
   }
   return [value,rest];
@@ -149,11 +161,16 @@ function evaluator(input, dict = envDict) {
 // console.log(evaluator('(fact 4)'))
 // console.log(evaluator('(define fib (lambda (n) (if (< n 2) 1 (+ (fib (- n 1)) (fib (- n 2))))))'))
 // console.log(evaluator('(fib 5)'))
+// console.log(evaluator('(list 1 1 2)'))
+// console.log(evaluator('(count 0 (list 0 1 2 3 0 0))'))
+// console.log(evaluator('(count (quote the) (quote (the more the merrier the bigger the better)))'))
 // console.log(evaluator('(circle (fact 10))'))
-console.log(evaluator('(define twice (lambda (x) (* 2 x)))'))
+// console.log(evaluator('(define add (lambda (x y z) (+ x y z)))'))
+// console.log(evaluator('(add 4 5 6)'))
+// console.log(evaluator('(define twice (lambda (x) (* 2 x)))'))
 // console.log(evaluator('(twice (twice (twice 5)))'))
-console.log(evaluator('(define repeat (lambda (f) (lambda (x) (f (f x)))))'))
-console.log(evaluator('((repeat twice) 10)'))
+// console.log(evaluator('(define repeat (lambda (f) (lambda (x) (f (f x)))))'))
+// console.log(evaluator('(define test (repeat twice))'))
 // console.log(evaluator('(test 10)'))
 // let x = envDict.repeat(envDict.twice)
 // console.log(x(2))
@@ -161,6 +178,3 @@ console.log(evaluator('((repeat twice) 10)'))
 // console.log(evaluator('(val 10)'))
 // console.log(evaluator('(define z (lambda (x) (lambda (x) (+ x 1))))'))
 // console.log(evaluator('((z 10) 12)'))
-
-
-
