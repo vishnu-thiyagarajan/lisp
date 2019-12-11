@@ -39,10 +39,24 @@ const envDict = {
 const ref = {
   begin: beginParser,
   define: defParser,
+  set: defParser,
   if: ifParser,
   lambda: lambdaParser,
   count: countParser,
+  range: rangeParser
 };
+
+function rangeParser(input) {
+  let match = /^ *([^\s]+) +([^\s]+)( +([^\s]+))?/.exec(input);
+  if (!match) return null;
+  let start = atomicValue(match[1])[0], end = atomicValue(match[2])[0]
+  let inc = match[4] ? atomicValue(match[4])[0] : 1
+  let ans = [],flag = 0;
+  if (start > end) {[start,end] = [end,start]; flag = 1;}
+  if (inc<0) inc *= -1 
+  for (let i = start; i <= end; i+=inc) { ans.push(i) }
+  return [flag ? ans.reverse() : ans,""]
+}
 
 function countParser(input) {
   var [needCountOf,input] = evaluator(input)
@@ -143,7 +157,6 @@ function evaluator(input, dict = envDict) {
   return [result, outterRest]
 }
 // console.log(evaluator('(begin (+ 20 10) (define s "made"))'))
-// console.log(evaluator('(begin (+ 20 10) (define s "made"))'))
 // console.log(evaluator('(begin (define r (+ 20 10)) (define s r))'))
 // console.log(evaluator('(begin (define r (+ 20 10)) (define s 10) (define t (+ s r)) t)'))
 // console.log(evaluator('(begin (define r (+ 20 10)) (define s 10))'))
@@ -172,6 +185,10 @@ function evaluator(input, dict = envDict) {
 // console.log(evaluator('(define repeat (lambda (f) (lambda (x) (f (f x)))))'))
 // console.log(evaluator('(define test (repeat twice))'))
 // console.log(evaluator('(test 10)'))
+// console.log(evaluator('(range 0 10)'))
+// console.log(evaluator('(range 0 10 2)'))
+// console.log(evaluator('(range 10 0 -2)'))
+// console.log(evaluator('(range 10 0)'))
 // let x = envDict.repeat(envDict.twice)
 // console.log(x(2))
 // console.log(evaluator('(define val (repeat twice))'))
